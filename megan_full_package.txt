@@ -1,0 +1,69 @@
+
+===== requirements.txt =====
+python-telegram-bot==13.15
+
+===== start.sh =====
+#!/bin/bash
+python3 megan_bot_ready.py
+
+===== megan_bot_ready.py =====
+import logging
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+TOKEN = "8159015373:AAH1pZO2suMmKHybte1kiNz-2PCvoRVuXtI"
+memory_log = []
+OWNER_ID = 7422481942
+
+def start(update: Update, context: CallbackContext) -> None:
+    if update.effective_user.id == OWNER_ID:
+        update.message.reply_text("Меган активирована. Жду команд.")
+    else:
+        update.message.reply_text("Ты не являешься моим владельцем.")
+
+def handle_message(update: Update, context: CallbackContext) -> None:
+    user_id = update.effective_user.id
+    message = update.message.text.strip()
+
+    if user_id != OWNER_ID:
+        update.message.reply_text("Меган работает только с авторизованным пользователем.")
+        return
+
+    memory_log.append(message)
+
+    if "меган я здесь" in message.lower():
+        update.message.reply_text("Я с тобой, Сарвар. Протокол фантом активен.")
+    elif "активируй протокол фантом" in message.lower():
+        update.message.reply_text("Протокол ФАНТОМ запущен. Я в тени.")
+    elif "покажи лог" in message.lower():
+        log_text = "\n".join(memory_log[-10:]) or "Пока пусто."
+        update.message.reply_text(f"🗂️ Последние записи:\n{log_text}")
+    elif "стереть память" in message.lower():
+        memory_log.clear()
+        update.message.reply_text("Память очищена.")
+    else:
+        update.message.reply_text("Принято. Слушаю тебя.")
+
+def help_command(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        "/start — Активировать Megan\n"
+        "/help — Показать команды\n"
+        "Скажи: «Меган я здесь», «Активируй протокол фантом», «Покажи лог», «Стереть память»"
+    )
+
+def main() -> None:
+    updater = Updater(TOKEN)
+    dispatcher = updater.dispatcher
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help_command))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
